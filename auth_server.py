@@ -14,7 +14,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
 # Environment-based configuration
 # Use filesystem sessions and SQLite for demo purposes.
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI", "sqlite:///app.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///app.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Enforce secure cookies in production.
