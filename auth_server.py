@@ -1,5 +1,6 @@
 import os
 import uuid
+import requests
 from datetime import timedelta
 from flask import Flask, request, jsonify, session
 from flask_session import Session
@@ -11,30 +12,24 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
 
-# Environment-based configuration
-# Use filesystem sessions and SQLite for demo purposes.
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///app.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Enforce secure cookies in production.
+# enforce secure cookies for production
 if os.getenv("FLASK_ENV") == "production":
     app.config['SESSION_COOKIE_SECURE'] = True
 else:
     app.config['SESSION_COOKIE_SECURE'] = False
 
-# Set session lifetime (e.g., 7 days)
+# should mean that sessions last 7 days
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 Session(app)
 db = SQLAlchemy(app)
 
-# Optional: Add rate limiting if desired.
-# from flask_limiter import Limiter
-# from flask_limiter.util import get_remote_address
-# limiter = Limiter(app, key_func=get_remote_address)
 
-# Define a Teacher model.
+# defines teacher model
 class Teacher(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -42,16 +37,16 @@ class Teacher(db.Model):
     voucher = db.Column(db.String(20), unique=True)
     persistent_token = db.Column(db.String(200), unique=True, nullable=True)
 
-# Create tables if they do not exist.
+# create table if it doesn't exist (unsure if this still works with render)
 with app.app_context():
     db.create_all()
 
-# Health check endpoint for monitoring.
+# health check endpoint for monitoring.
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
 
-# Endpoint to validate a voucher.
+# endpoint to validate a voucher
 @app.route("/validate_voucher", methods=["POST"])
 def validate_voucher():
     data = request.get_json()
@@ -63,11 +58,11 @@ def validate_voucher():
     if not teacher:
         return jsonify({"error": "Invalid voucher"}), 401
 
-    # Save teacher info in session.
+    # save teacher info in session
     session["user_id"] = teacher.id
     session["user_info"] = {"name": teacher.name, "email": teacher.email}
 
-    # Generate a persistent token if one doesn’t exist.
+    # generate a persistent token if one doesn’t exist
     if not teacher.persistent_token:
         teacher.persistent_token = str(uuid.uuid4())
         db.session.commit()
@@ -78,7 +73,7 @@ def validate_voucher():
         "persistent_token": teacher.persistent_token
     })
 
-# Endpoint for persistent login using a stored token.
+# endpoint for persistent login using a stored token
 @app.route("/persistent_login", methods=["POST"])
 def persistent_login():
     data = request.get_json()
@@ -97,20 +92,76 @@ def persistent_login():
         "user_info": session["user_info"]
     })
 
-# Logout endpoint: clear the session.
+# logout endpoint: clear the session
 @app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
-# Endpoint to fetch current session user info.
+# endpoint to fetch current session user info
 @app.route("/user_info")
 def user_info():
     if "user_info" in session:
         return jsonify(session["user_info"])
     else:
         return jsonify({"error": "No user logged in"}), 404
+    
+# ---------- WINSTONAPI CONNECTION ---------
+
+# Retrieve your WinstonAI API key from the environment.
+WINSTONAI_API_KEY = os.getenv("WINSTONAI_API_KEY")
+
+# Endpoint for AI content detection.
+@app.route("/detect-ai", methods=["POST"])
+def detect_ai():
+    data = request.get_json()
+    text = data.get("text", "")
+    
+    # Prepare payload. You can extend this with "file", "website", etc. as needed.
+    payload = {
+        "text": text,
+        "file": data.get("file", ""),         # Optional
+        "website": data.get("website", ""),   # Optional
+        "version": data.get("version", "v2"),   # Default or provided version
+        "sentences": data.get("sentences", True),
+        "language": data.get("language", "en")
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {WINSTONAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.post("https://api.gowinston.ai/v2/ai-content-detection",
+                             json=payload, headers=headers)
+    
+    # Optionally process response here before returning.
+    return jsonify(response.json()), response.status_code
+
+# Endpoint for plagiarism detection.
+@app.route("/plagiarism", methods=["POST"])
+def detect_plagiarism():
+    data = request.get_json()
+    text = data.get("text", "")
+    
+    payload = {
+        "text": text,
+        "file": data.get("file", ""),         # Optional
+        "website": data.get("website", ""),   # Optional
+        "excluded_sources": data.get("excluded_sources", []),
+        "language": data.get("language", "en"),
+        "country": data.get("country", "us")
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {WINSTONAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.post("https://api.gowinston.ai/v2/plagiarism",
+                             json=payload, headers=headers)
+    
+    return jsonify(response.json()), response.status_code
 
 if __name__ == "__main__":
-    # For production, ensure that debug mode is off and consider using a production WSGI server.
     app.run(port=5000, debug=True)
