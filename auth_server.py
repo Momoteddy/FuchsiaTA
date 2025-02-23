@@ -180,7 +180,7 @@ def chat():
 
     print("Messages:", messages)
     print("Model:", model)
-    print(openai)
+    print(OpenAI)
 
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
@@ -192,7 +192,7 @@ def chat():
         )
 
         # Assuming the response contains the text from the completion
-        return jsonify({"message": completion.choices[0].message.content}), 200
+        return jsonify({"message": completion.choices[0].message}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
