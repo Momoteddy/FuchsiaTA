@@ -1,6 +1,7 @@
 import os
 import uuid
 import requests
+import openai
 from datetime import timedelta
 from flask import Flask, request, jsonify, session
 from flask_session import Session
@@ -11,6 +12,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///app.db")
@@ -162,6 +164,25 @@ def detect_plagiarism():
                              json=payload, headers=headers)
     
     return jsonify(response.json()), response.status_code
+
+# --------- Chatbot Endpoint using OpenAI ---------
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    if not data or "messages" not in data:
+        return jsonify({"error": "Messages not provided"}), 400
+
+    messages = data["messages"]
+    try:
+        # Create a chat completion using OpenAI's API.
+        completion = openai.ChatCompletion.create(
+            model="gpt-4o",  # Replace with your desired model name
+            messages=messages
+        )
+        # Assuming the completion returns a structure with .choices[0].message
+        return jsonify({"message": completion.choices[0].message}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
