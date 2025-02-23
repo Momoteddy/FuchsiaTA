@@ -10,9 +10,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///app.db")
