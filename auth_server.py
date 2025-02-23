@@ -188,7 +188,7 @@ def chat():
         )
 
         # Assuming the response contains the text from the completion
-        return jsonify({"message": response.choices[0].text.strip()}), 200
+        return jsonify({"message": response.choices[0].message.content()}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
