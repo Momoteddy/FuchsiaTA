@@ -173,11 +173,16 @@ def chat():
         return jsonify({"error": "Messages not provided"}), 400
 
     messages = data["messages"]
+    model = data.get("model", "gpt-4")  # Default to a model if not provided
+
+    print("Messages:", messages)
+    print("Model:", model)
+
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
         response = openai.chat.completions.create(
             model="gpt-4",  # Replace with your desired model
-            prompt=messages[-1]["content"],  # Taking the latest message in the conversation
+            prompt=messages,  # Taking the latest message in the conversation
             max_tokens=150,  # You can adjust max_tokens as per your use case
             temperature=0.7  # Set the temperature (optional)
         )
