@@ -2,6 +2,7 @@ import os
 import uuid
 import requests
 import openai
+from openai import OpenAI
 from datetime import timedelta
 from flask import Flask, request, jsonify, session
 from flask_session import Session
@@ -10,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
@@ -182,7 +183,7 @@ def chat():
 
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
-        response = openai.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4",  # Replace with your desired model
             messages=messages,  # Taking the latest message in the conversation
             max_tokens=150,  # You can adjust max_tokens as per your use case
