@@ -182,7 +182,7 @@ def chat():
         # Create a chat completion using OpenAI's API (adjust model as necessary)
         response = openai.chat.completions.create(
             model="gpt-4",  # Replace with your desired model
-            prompt=messages,  # Taking the latest message in the conversation
+            messages=messages,  # Taking the latest message in the conversation
             max_tokens=150,  # You can adjust max_tokens as per your use case
             temperature=0.7  # Set the temperature (optional)
         )
