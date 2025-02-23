@@ -178,6 +178,7 @@ def chat():
 
     print("messages:", messages)
     print("model:", model)
+    print(openai)
 
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
