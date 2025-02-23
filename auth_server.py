@@ -175,7 +175,7 @@ def chat():
     messages = data["messages"]
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
-        response = openai.Completion.create(
+        response = openai.completions.create(
             model="gpt-3.5-turbo",  # Replace with your desired model
             prompt=messages[-1]["content"],  # Taking the latest message in the conversation
             max_tokens=150,  # You can adjust max_tokens as per your use case
