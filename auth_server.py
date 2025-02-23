@@ -9,12 +9,13 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
-load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
+
 
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///app.db")
@@ -177,13 +178,13 @@ def chat():
     messages = data["messages"]
     model = data.get("model", "gpt-4")  # Default to a model if not provided
 
-    print("messages:", messages)
-    print("model:", model)
+    print("Messages:", messages)
+    print("Model:", model)
     print(openai)
 
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
-        response = client.chat.completions.create(
+        completion = client.chat.completions.create(
             model="gpt-4",  # Replace with your desired model
             messages=messages,  # Taking the latest message in the conversation
             max_tokens=150,  # You can adjust max_tokens as per your use case
@@ -191,7 +192,7 @@ def chat():
         )
 
         # Assuming the response contains the text from the completion
-        return jsonify({"message": response.choices[0].message.content()}), 200
+        return jsonify({"message": completion.choices[0].message}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
