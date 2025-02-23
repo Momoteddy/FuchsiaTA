@@ -174,13 +174,16 @@ def chat():
 
     messages = data["messages"]
     try:
-        # Create a chat completion using OpenAI's API.
-        completion = openai.ChatCompletion.create(
-            model="gpt-4o",  # Replace with your desired model name
-            messages=messages
+        # Create a chat completion using OpenAI's API (adjust model as necessary)
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",  # Replace with your desired model
+            prompt=messages[-1]["content"],  # Taking the latest message in the conversation
+            max_tokens=150,  # You can adjust max_tokens as per your use case
+            temperature=0.7  # Set the temperature (optional)
         )
-        # Assuming the completion returns a structure with .choices[0].message
-        return jsonify({"message": completion.choices[0].message}), 200
+
+        # Assuming the response contains the text from the completion
+        return jsonify({"message": response.choices[0].text.strip()}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
