@@ -175,8 +175,8 @@ def chat():
     messages = data["messages"]
     model = data.get("model", "gpt-4")  # Default to a model if not provided
 
-    print("Messages:", messages)
-    print("Model:", model)
+    print("messages:", messages)
+    print("model:", model)
 
     try:
         # Create a chat completion using OpenAI's API (adjust model as necessary)
